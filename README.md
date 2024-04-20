@@ -2,6 +2,8 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+install ESBuild for in browser transpile and bundling of JS code using npm install --save-exact esbuild-wasm@0.8.27
+
 ## Available Scripts
 
 In the project directory, you can run:

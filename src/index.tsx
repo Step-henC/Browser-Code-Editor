@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild-wasm'
 import React, {useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom/client";
+import { unpkgPathPlugin } from './plugins/unpkg-path-plugin';
 
 
 const App = () => {
@@ -21,12 +22,27 @@ const App = () => {
       return;
    }
 
-   const result = await ref.current.transform(input, {
-    loader: 'jsx',//tell esbuild what kind of code we are providing
-    target: 'es2015' //tell what version of js we want esbuild for browser interpretation
-   })
+  //  const result = await ref.current.transform(input, {
+  //   loader: 'jsx',//tell esbuild what kind of code we are providing
+  //   target: 'es2015' //tell what version of js we want esbuild for browser interpretation
+  //  })
 
-   setCode(result.code)
+  const result = await ref.current.build({
+    entryPoints: ['index.js'],
+    bundle: true,
+    write: false,
+    plugins: [unpkgPathPlugin()],
+    //add define property to suppress warnings. When getting pkgs like React, they need these properties defined
+    //have to replace with STRING of production hence teh double quotes
+    //the global substitution is done in webpack automatically, here for housekeeping
+    define: {
+      'process.env.NODE_ENV': '"production"', 
+      global: 'window'
+    }
+  })
+  console.log(result)
+
+   setCode(result.outputFiles[0].text)
   }
 
   useEffect(() => {

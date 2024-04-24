@@ -15,7 +15,7 @@ const App = () => {
   const startService = async () => {
     ref.current = await esbuild.startService({ //we can use a ref to get the service everywhere
       worker: true,
-      wasmURL: './esbuild.wasm' //copied from node_modules
+      wasmURL: 'https://unpkg.com/esbuild-wasm@0.8.27/esbuild.wasm' //originally copies esbuild.wasm from node_modules into public dir, but now user pays for cost of downloading from unpkg.com
     })
 
     //use service for its transform function
@@ -24,11 +24,6 @@ const App = () => {
    if (!ref.current){ //make sure service started
       return;
    }
-
-  //  const result = await ref.current.transform(input, {
-  //   loader: 'jsx',//tell esbuild what kind of code we are providing
-  //   target: 'es2015' //tell what version of js we want esbuild for browser interpretation
-  //  })
 
   const result = await ref.current.build({
     entryPoints: ['index.js'],
@@ -43,19 +38,30 @@ const App = () => {
       global: 'window'
     }
   })
-  console.log(result)
 
-   setCode(result.outputFiles[0].text)
+   setCode(result.outputFiles[0].text);
+
+   //execute JS code by using browser-built-in eval()
+   try {
+    eval(result.outputFiles[0].text)
+
+   } catch( err) {
+    alert(err)
+   }
   }
 
   useEffect(() => {
 startService() //start service once on render
 
   }, [])
-  return <div>
-    <textarea value={input} onChange={(e) => setInput(e.target.value)}></textarea>
-    <button onClick={onClick}>Submit</button>
+  return <div style={{display: 'flex', flexDirection: 'column'}}>
+    <textarea style={{minHeight: '7em', width: '70%'}} value={input} onChange={(e) => setInput(e.target.value)}></textarea>
+    <button style={{width: '5em', height: '3em'}} onClick={onClick}>Submit</button>
     <pre>{code}</pre>
+    {/* since we do not want direct access from parent to child iframe we MUST have a sandbox property and it cannot say "allow-same-origin" */}
+    {/* iframe also has direct access if we fetch parent html and iframe htm from same domain, port, protocol if all conditions are true */}
+    {/* codepen and codesandbox uses sandbox='allow-same-origin' but loads up child frame from a different domain */}
+    <iframe sandbox="" src='/test.html'></iframe>
     </div>
 }
 

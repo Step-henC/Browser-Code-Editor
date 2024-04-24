@@ -11,6 +11,7 @@ const App = () => {
   const [input, setInput] = useState('')
   const [code, setCode] = useState('')
   const ref = useRef<any>(null)
+  const iFrameRef = useRef<any>(null)
 
   const startService = async () => {
     ref.current = await esbuild.startService({ //we can use a ref to get the service everywhere
@@ -39,21 +40,30 @@ const App = () => {
     }
   })
 
-   setCode(result.outputFiles[0].text);
+  //iframe can communicate with parents through event listeners
+  iFrameRef.current.contentWindow.postMessage(result.outputFiles[0].text, '*')
 
-   //execute JS code by using browser-built-in eval()
-   try {
-    eval(result.outputFiles[0].text)
-
-   } catch( err) {
-    alert(err)
-   }
   }
 
   useEffect(() => {
 startService() //start service once on render
 
   }, [])
+
+  const html = `
+ <html>
+  <head></head>
+  <body>
+    <div id="root">
+      <script>
+        window.addEventListener('message', (event) => {
+          eval(event.data);
+        }, false)
+      </script>
+    </div>
+  <body>
+ </html>
+  `
   return <div style={{display: 'flex', flexDirection: 'column'}}>
     <textarea style={{minHeight: '7em', width: '70%'}} value={input} onChange={(e) => setInput(e.target.value)}></textarea>
     <button style={{width: '5em', height: '3em'}} onClick={onClick}>Submit</button>
@@ -61,7 +71,10 @@ startService() //start service once on render
     {/* since we do not want direct access from parent to child iframe we MUST have a sandbox property and it cannot say "allow-same-origin" */}
     {/* iframe also has direct access if we fetch parent html and iframe htm from same domain, port, protocol if all conditions are true */}
     {/* codepen and codesandbox uses sandbox='allow-same-origin' but loads up child frame from a different domain */}
-    <iframe sandbox="" src='/test.html'></iframe>
+    {/* we will restrict parent-child communication through sandbox="" downside is users cannot access cookies nor localstorage */}
+    {/* srcDoc allows us to load html in iframe with simple local string so we do not have to lose time fetching a src html doc elsewhere */}
+
+    <iframe ref={iFrameRef} title='code-sandbox' sandbox="allow-scripts" srcDoc={html} />
     </div>
 }
 

@@ -9,7 +9,6 @@ import { fetchPlugin } from './plugins/fetch-plugin';
 
 const App = () => {
   const [input, setInput] = useState('')
-  const [code, setCode] = useState('')
   const ref = useRef<any>(null)
   const iFrameRef = useRef<any>(null)
 
@@ -25,6 +24,10 @@ const App = () => {
    if (!ref.current){ //make sure service started
       return;
    }
+
+
+   // reset the iframe each code change so user cannot delete root
+  iFrameRef.current.srcdoc = html;
 
   const result = await ref.current.build({
     entryPoints: ['index.js'],
@@ -50,6 +53,7 @@ startService() //start service once on render
 
   }, [])
 
+  // rethrow err in catch due to potential useful error info in console
   const html = `
  <html>
   <head></head>
@@ -57,7 +61,14 @@ startService() //start service once on render
     <div id="root">
       <script>
         window.addEventListener('message', (event) => {
-          eval(event.data);
+          try{
+            eval(event.data);
+
+          } catch (err){
+              const root = document.querySelector('#root');
+              root.innerHTML = '<div style="color: red"><h4>Runtime Error</h4>' + err + '</div>';
+              console.error(err);
+          }
         }, false)
       </script>
     </div>
@@ -67,7 +78,6 @@ startService() //start service once on render
   return <div style={{display: 'flex', flexDirection: 'column'}}>
     <textarea style={{minHeight: '7em', width: '70%'}} value={input} onChange={(e) => setInput(e.target.value)}></textarea>
     <button style={{width: '5em', height: '3em'}} onClick={onClick}>Submit</button>
-    <pre>{code}</pre>
     {/* since we do not want direct access from parent to child iframe we MUST have a sandbox property and it cannot say "allow-same-origin" */}
     {/* iframe also has direct access if we fetch parent html and iframe htm from same domain, port, protocol if all conditions are true */}
     {/* codepen and codesandbox uses sandbox='allow-same-origin' but loads up child frame from a different domain */}

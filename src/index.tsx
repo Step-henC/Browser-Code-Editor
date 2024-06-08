@@ -3,7 +3,7 @@ import React, {useState, useEffect, useRef} from "react";
 import ReactDOM from "react-dom/client";
 import { unpkgPathPlugin } from './plugins/unpkg-path-plugin';
 import { fetchPlugin } from './plugins/fetch-plugin';
-
+import CodeEditor from './components/code-editor';
 
 
 
@@ -76,6 +76,7 @@ startService() //start service once on render
  </html>
   `
   return <div style={{display: 'flex', flexDirection: 'column'}}>
+    <CodeEditor />
     <textarea style={{minHeight: '7em', width: '70%'}} value={input} onChange={(e) => setInput(e.target.value)}></textarea>
     <button style={{width: '5em', height: '3em'}} onClick={onClick}>Submit</button>
     {/* since we do not want direct access from parent to child iframe we MUST have a sandbox property and it cannot say "allow-same-origin" */}

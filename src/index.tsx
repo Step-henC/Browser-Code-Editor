@@ -76,7 +76,10 @@ startService() //start service once on render
  </html>
   `
   return <div style={{display: 'flex', flexDirection: 'column'}}>
-    <CodeEditor />
+    <CodeEditor
+     initialValue='const a =1;' 
+     onChange={(value) => setInput(value)}
+     />
     <textarea style={{minHeight: '7em', width: '70%'}} value={input} onChange={(e) => setInput(e.target.value)}></textarea>
     <button style={{width: '5em', height: '3em'}} onClick={onClick}>Submit</button>
     {/* since we do not want direct access from parent to child iframe we MUST have a sandbox property and it cannot say "allow-same-origin" */}
